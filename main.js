@@ -3,7 +3,7 @@ import './style.css'
 const canvas = document.getElementById('pong-canvas')
 const ctx = canvas.getContext('2d')
 
-const BLOCK_SIZE = 7
+const BLOCK_SIZE = 5
 const BOARD_WIDTH = 100
 const BOARD_HEIGHT = 100
 
@@ -32,13 +32,8 @@ const balls = [
     position: { x: 5, y: 50 },
     direction: { x: 1, y: 1 },
     shape: [
-      [1, 1, 0, 0, 0, 1, 1],
-      [1, 0, 0, 0, 0, 0, 1],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [1, 0, 0, 0, 0, 0, 1],
-      [1, 1, 0, 0, 0, 1, 1]
+      [0, 0],
+      [0, 0]
     ]
   },
   {
@@ -46,20 +41,50 @@ const balls = [
     position: { x: 88, y: 50 },
     direction: { x: -1, y: -1 },
     shape: [
-      [0, 0, 1, 1, 1, 0, 0],
-      [0, 1, 1, 1, 1, 1, 0],
-      [1, 1, 1, 1, 1, 1, 1],
-      [1, 1, 1, 1, 1, 1, 1],
-      [1, 1, 1, 1, 1, 1, 1],
-      [0, 1, 1, 1, 1, 1, 0],
-      [0, 0, 1, 1, 1, 0, 0]
+      [1, 1],
+      [1, 1]
     ]
   }
 ]
 
 // Game loop
+let dropCounter = 0
+let lastTime = 0
+function update (time = 0) {
+  const deltaTime = time - lastTime
+  lastTime = time
 
-function update () {
+  dropCounter += deltaTime
+
+  if (dropCounter > 20) {
+    if (balls[1].direction.y === 1) {
+      balls[1].position.y++
+      if (checkCollision(balls[1])) {
+        balls[1].position.y--
+        balls[1].direction.y = -1
+      }
+    } else {
+      balls[1].position.y--
+      if (checkCollision(balls[1])) {
+        balls[1].position.y++
+        balls[1].direction.y = 1
+      }
+    }
+    if (balls[1].direction.x === 1) {
+      balls[1].position.x++
+      if (checkCollision(balls[1])) {
+        balls[1].position.x--
+        balls[1].direction.x = -1
+      }
+    } else {
+      balls[1].position.x--
+      if (checkCollision(balls[1])) {
+        balls[1].position.x++
+        balls[1].direction.x = 1
+      }
+    }
+    dropCounter = 0
+  }
   draw()
   window.requestAnimationFrame(update)
 }
@@ -102,28 +127,48 @@ function draw () {
 
 document.addEventListener('keydown', event => {
   if (event.key === 'ArrowUp') {
-    if (checkCollision(balls[0])) balls[0].position.y--
+    balls[0].position.y--
+    if (checkCollision(balls[0])) {
+      balls[0].position.y++
+    }
   }
   if (event.key === 'ArrowDown') {
-    if (checkCollision(balls[0])) balls[0].position.y++
+    balls[0].position.y++
+    if (checkCollision(balls[0])) {
+      balls[0].position.y--
+    }
   }
   if (event.key === 'ArrowLeft') {
-    console.log(balls[0].position.x)
-    if (checkCollision(balls[0])) balls[0].position.x--
+    balls[0].position.x--
+    if (checkCollision(balls[0])) {
+      balls[0].position.x++
+    }
   }
   if (event.key === 'ArrowRight') {
-    if (checkCollision(balls[0])) balls[0].position.x++
+    balls[0].position.x++
+    if (checkCollision(balls[0])) {
+      balls[0].position.x--
+    }
   }
 })
 
 function checkCollision (ball) {
   if (ball.id === 0) {
-    if (board[ball.position.y][ball.position.x] === 1) return false
-    return true
+    return ball.shape.find((row, y) => {
+      return row.find((value, x) => {
+        return (
+          value !== 0 &&
+          board[ball.position.y + y]?.[ball.position.x + x] !== 0
+        )
+      })
+    })
   } else if (ball.id === 1) {
     return ball.shape.find((row, y) => {
       return row.find((value, x) => {
-        return value !== 0 && board[ball.position.y + y][ball.position.x + x] !== 1
+        return (
+          value !== 0 &&
+          board[ball.position.y + y]?.[ball.position.x + x] !== 1
+        )
       })
     })
   }
