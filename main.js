@@ -3,9 +3,9 @@ import './style.css'
 const canvas = document.getElementById('pong-canvas')
 const ctx = canvas.getContext('2d')
 
-const BLOCK_SIZE = 5
-const BOARD_WIDTH = 100
-const BOARD_HEIGHT = 100
+const BLOCK_SIZE = 10
+const BOARD_WIDTH = 20
+const BOARD_HEIGHT = 20
 
 canvas.width = BLOCK_SIZE * BOARD_WIDTH
 canvas.height = BLOCK_SIZE * BOARD_HEIGHT
@@ -19,17 +19,26 @@ const board = []
 for (let i = 0; i < BOARD_HEIGHT; i++) {
   board[i] = []
   for (let j = 0; j < BOARD_WIDTH; j++) {
-    if (j < 50) board[i][j] = 0
-    if (j > 50) board[i][j] = 1
+    if (j < BOARD_WIDTH / 2) board[i][j] = 0
+    if (j > BOARD_WIDTH / 2) board[i][j] = 1
   }
 }
 
 // Balls
+const position1 = {
+  x: Math.floor(Math.random() * BOARD_WIDTH / 2) + BOARD_WIDTH / 2,
+  y: Math.floor(Math.random() * BOARD_HEIGHT)
+}
+const position0 = {
+  x: Math.floor(Math.random() * BOARD_WIDTH / 2),
+  y: Math.floor(Math.random() * BOARD_HEIGHT)
+}
+console.log(position1)
 
 const balls = [
   {
     id: 0,
-    position: { x: 5, y: 50 },
+    position: position0,
     direction: { x: 1, y: 1 },
     shape: [
       [0, 0],
@@ -38,7 +47,7 @@ const balls = [
   },
   {
     id: 1,
-    position: { x: 88, y: 50 },
+    position: position1,
     direction: { x: -1, y: -1 },
     shape: [
       [1, 1],
@@ -56,16 +65,18 @@ function update (time = 0) {
 
   dropCounter += deltaTime
 
-  if (dropCounter > 20) {
+  if (dropCounter > 60) {
     if (balls[1].direction.y === 1) {
       balls[1].position.y++
       if (checkCollision(balls[1])) {
+        paintPixel(balls[1])
         balls[1].position.y--
         balls[1].direction.y = -1
       }
     } else {
       balls[1].position.y--
       if (checkCollision(balls[1])) {
+        paintPixel(balls[1])
         balls[1].position.y++
         balls[1].direction.y = 1
       }
@@ -73,12 +84,14 @@ function update (time = 0) {
     if (balls[1].direction.x === 1) {
       balls[1].position.x++
       if (checkCollision(balls[1])) {
+        paintPixel(balls[1])
         balls[1].position.x--
         balls[1].direction.x = -1
       }
     } else {
       balls[1].position.x--
       if (checkCollision(balls[1])) {
+        paintPixel(balls[1])
         balls[1].position.x++
         balls[1].direction.x = 1
       }
@@ -87,6 +100,37 @@ function update (time = 0) {
   }
   draw()
   window.requestAnimationFrame(update)
+}
+
+function paintPixel (ball) {
+  if (
+    board[ball.position.y] &&
+    board[ball.position.y + 1] &&
+    board[ball.position.y - 1] &&
+    board[ball.position.y + 2]
+  ) {
+    if (ball.direction.y === 1 && ball.direction.x === 1) {
+      board[ball.position.y + 1][ball.position.x] = 1
+      board[ball.position.y][ball.position.x + 1] = 1
+      board[ball.position.y][ball.position.x] = 1
+      board[ball.position.y + 1][ball.position.x + 1] = 1
+    } else if (ball.direction.y === -1 && ball.direction.x === -1) {
+      board[ball.position.y + 1][ball.position.x] = 1
+      board[ball.position.y][ball.position.x - 1] = 1
+      board[ball.position.y][ball.position.x] = 1
+      board[ball.position.y + 1][ball.position.x - 1] = 1
+    } else if (ball.direction.y === 1 && ball.direction.x === -1) {
+      board[ball.position.y][ball.position.x] = 1
+      board[ball.position.y + 1][ball.position.x - 1] = 1
+      board[ball.position.y + 1][ball.position.x] = 1
+      board[ball.position.y][ball.position.x - 1] = 1
+    } else if (ball.direction.y === -1 && ball.direction.x === 1) {
+      board[ball.position.y - 1][ball.position.x] = 1
+      board[ball.position.y][ball.position.x + 1] = 1
+      board[ball.position.y][ball.position.x] = 1
+      board[ball.position.y - 1][ball.position.x + 1] = 1
+    }
+  }
 }
 
 function draw () {
